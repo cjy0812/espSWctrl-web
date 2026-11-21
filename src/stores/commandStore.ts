@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, shallowRef } from 'vue'
 
+import { describeAck } from '@/protocol/ack'
 import type { DeviceCommand } from '@/protocol/payloads'
 import type { TrackedRequest } from '@/protocol/requestTracker'
 import { RequestTracker } from '@/protocol/requestTracker'
@@ -53,10 +54,11 @@ export const useCommandStore = defineStore('command', () => {
     if (!resolved) {
       logStore.push({ kind: 'ack', text: `收到无法归因的回执：${result}`, meta: { result, nonce } })
     } else {
+      const meta = describeAck(result)
       logStore.push({
         kind: 'ack',
-        text: `回执：${resolved.cmd} → ${result}`,
-        meta: { id: resolved.id, late: resolved.late },
+        text: `回执：${resolved.cmd} → ${meta.label}${meta.hint ? `（${meta.hint}）` : ''}`,
+        meta: { id: resolved.id, result, tone: meta.tone, late: resolved.late },
       })
     }
     refresh()

@@ -85,6 +85,12 @@ select {
   font-weight: 600;
 }
 
+.topbar__right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
 .pill {
   padding: 2px 10px;
   border-radius: 999px;

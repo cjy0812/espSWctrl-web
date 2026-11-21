@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
+import { useTheme } from '@/composables/useTheme'
 import ConnectionBar from '@/components/ConnectionBar.vue'
 import ConnectionSettingsDrawer from '@/components/ConnectionSettingsDrawer.vue'
 import DeviceStatusCard from '@/components/DeviceStatusCard.vue'
@@ -15,6 +16,7 @@ type Tab = 'status' | 'logs' | 'params'
 const tab = ref<Tab>('status')
 const showSettings = ref(false)
 const connection = useConnectionStore()
+const theme = useTheme()
 
 const tabs: { key: Tab; label: string }[] = [
   { key: 'status', label: '状态' },
@@ -25,7 +27,7 @@ const tabs: { key: Tab; label: string }[] = [
 
 <template>
   <div class="shell">
-    <ConnectionBar />
+    <ConnectionBar :theme="theme.current.value" @toggle-theme="theme.toggle" />
 
     <main class="content">
       <template v-if="tab === 'status'">
