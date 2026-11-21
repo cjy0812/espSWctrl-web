@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-
+import { DEFAULT_CLIENT_ID } from '@/config/defaults'
 import {
   clearPersisted,
   type PersistedConfig,
@@ -11,7 +11,6 @@ import { MqttService } from '@/mqtt/mqttService'
 import type { BrokerConfig, MqttConnectionState } from '@/mqtt/types'
 import { parseAck, parseState, parseStatus } from '@/protocol/payloads'
 import { type TopicKind, topic } from '@/protocol/topics'
-import { randomClientId } from '@/utils/nonce'
 import { useCommandStore } from './commandStore'
 import { useDeviceStore } from './deviceStore'
 import { useLogStore } from './logStore'
@@ -86,7 +85,7 @@ export const useConnectionStore = defineStore('connection', () => {
     disconnect()
 
     const c = config.value
-    const clientId = c.clientId.trim() || randomClientId()
+    const clientId = c.clientId.trim() || DEFAULT_CLIENT_ID
     actualClientId.value = clientId
     const broker: BrokerConfig = {
       host: c.host.trim(),

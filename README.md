@@ -8,7 +8,9 @@ ESP32-C3「电源键控制器」的 Web 客户端。浏览器通过 **MQTT over 
 
 ## ⚠️ 安全须知（先读）
 
-1. **账号隔离**：前端**必须使用控制端账号**（broker ACL 授予了 `psw/<id>/{state,status,ack}` 的订阅权限与 `psw/<id>/cmd` 的发布权限）。**禁止使用设备账号** —— 设备账号在 broker 上只有 Publish 权限，订阅会被 ACL 拒绝（实测 `SUBACK` 失败）。
+1. **client id 是权限关键**：实测（2026-11-22）broker ACL **按 client id 匹配** —— `pc01-controller` 拥有控制端权限（订阅 `psw/<id>/{state,status,ack}` + 发布 `psw/<id>/cmd`），而设备的 `pc01-esp32` 只有 Publish 权限。前端默认 client id 即 `pc01-controller`（`DEFAULT_CLIENT_ID`），**改成随机值会失去订阅权限**。
+   - 认证账号：目前使用 `esp32_pc01`（与设备同一账号，因为 ACL 只看 client id）。建议后续在 broker 建独立认证用户给前端，实现真正的账号隔离；在建成之前，请勿把前端凭据透露给不可信方。
+   - 若既有 Windows/Android 控制端仍在线，同 client id 会互踢（EMQX 同 client_id 只允许一个连接）。
 2. **凭据存储**：默认凭据保存在 **sessionStorage**（关闭标签页即失效），也可选「仅本次会话（内存）」。**localStorage 持久化只在用户主动勾选「记住密码」时启用**。
 3. **XSS 风险**：本项目是公开部署的纯前端，MQTT 凭据存在于浏览器侧。一旦站点被注入恶意脚本，存储的凭据可能被盗。缓解措施：必须 HTTPS 托管 + CSP（`connect-src 'self' wss:`）；不将任何 broker 数据渲染为 HTML（禁用 `v-html`）；提供「清除凭据」。
 4. **日志脱敏**：密码、token 等字段在日志、异常对象、导出 JSON 中都会被替换为 `***`。
@@ -29,7 +31,8 @@ ESP32-C3「电源键控制器」的 Web 客户端。浏览器通过 **MQTT over 
 - [x] `scripts/probe-broker.mjs`：三个具体 topic 分别订阅（不用 `#`），打印 SUBACK 与 retained
 - [x] `scripts/send-test.mjs`：命令行发 press 做端到端
 - [x] 探测脚本可用：mqtt.js 成功完成 WSS + MQTT 握手（CONNACK rc=0） ——（2026-11-22，用设备账号实测；订阅如预期被 ACL 拒绝）
-- [ ] **验收：控制端账号下三 topic 各 `granted=1` 且收到 retained** —— 阻塞于控制端账号凭据（见文末未决项）
+- [x] **验收：三 topic 各 `granted=1` 且收到 retained** ——（2026-11-22，`pnpm mqtt:probe` 用 client id `pc01-controller` 实测：订阅 3/3，`state={"pc":"on"}`、`status={"online":true}`）
+- [x] **验收：publish ACL + ack 通道** ——（2026-11-22，`pnpm mqtt:send --cmd on` 收到 `{"nonce":"","result":"unknown-cmd"}`，未按键）
 
 ### 阶段 1：MVP 最小可用
 
@@ -41,7 +44,7 @@ ESP32-C3「电源键控制器」的 Web 客户端。浏览器通过 **MQTT over 
 - [x] 结果未知的人工确认流程（已执行 / 未执行）
 - [x] 单元测试 33 个（payloads / topics / requestTracker / mask） ——（2026-11-22，`pnpm test:unit` 全绿）
 - [x] 门禁：`pnpm typecheck` + `pnpm lint` + `pnpm build` 全绿
-- [ ] **验收：真机短按 → ack ok → PC 状态翻转** —— 阻塞于控制端账号凭据
+- [ ] **验收：真机短按 → ack ok → PC 状态翻转** —— 待授权执行（会真实翻转电源）
 
 ### 阶段 2：完善
 
@@ -90,7 +93,7 @@ pnpm mqtt:send press             # 端到端发 press 并等 ack
 
 ## 未决项
 
-1. **控制端账号凭据**：阶段 0/1 的真机验收需要 `pc01-controller` 账号的用户名与密码（设备账号订阅会被 ACL 拒绝，不能用于前端）。
+1. **账号隔离（建议）**：ACL 按 client id 授权，前端已用 `pc01-controller`。但认证目前与设备共用 `esp32_pc01`。建议在 EMQX 建独立认证用户（如 `pc01_controller`）给前端，然后把 ACL 的 `pc01-controller` 规则同时绑定到新用户名。
 2. **device_id 实际值**：固件默认 `pc01`，需从设备 NVS 确认。
 3. **主板 4000ms 强制断电阈值口径**：决定阶段 2 是否开放长按。
 4. **EMQX 并发连接限制**：前端与既有控制端共用 `pc01-controller` 时，同 client_id 会互踢；前端默认随机 client_id 规避。

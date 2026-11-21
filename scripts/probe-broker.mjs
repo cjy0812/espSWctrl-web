@@ -49,7 +49,9 @@ console.log(`topic    : ${Object.values(topics).join(' / ')}`)
 console.log('')
 
 const url = `wss://${host}:${port}${path.startsWith('/') ? path : `/${path}`}`
-const clientId = `probe-${Math.random().toString(36).slice(2, 8)}`
+// 默认随机，避免撞设备的 pc01-esp32；可用 MQTT_CLIENT_ID 指定，
+// 用于验证 ACL 是否按 client id 匹配（控制端规则可能绑在 pc01-controller 上）。
+const clientId = process.env.MQTT_CLIENT_ID || `probe-${Math.random().toString(36).slice(2, 8)}`
 
 const client = mqtt.connect(url, {
   clientId,

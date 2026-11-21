@@ -4,14 +4,21 @@
  *
  * 用法：
  *   $env:MQTT_USER='...'; $env:MQTT_PASS='...'; pnpm mqtt:send press
+ *   pnpm mqtt:send --cmd on     # 发一条设备必然拒绝的指令，用于验证 publish ACL（不按键）
  *
- * 注意：press_long 在 MVP 阶段不开放，本脚本也只支持 press。
+ * 注意：press_long 在 MVP 阶段不开放，本脚本默认只发 press。
  * 固件 ack 的 nonce 恒为空串，无法用 ack 关联请求，所以这里只做「收到 ack 即打印」。
  */
 
 import mqtt from 'mqtt'
 
-const cmd = process.argv[2] === 'press_long' ? 'press_long' : 'press'
+function resolveCmd(argv) {
+  const i = argv.indexOf('--cmd')
+  if (i >= 0 && argv[i + 1]) return argv[i + 1]
+  return argv[2] === 'press_long' ? 'press_long' : 'press'
+}
+
+const cmd = resolveCmd(process.argv.slice(2))
 
 const host = process.env.MQTT_HOST ?? ''
 const port = Number(process.env.MQTT_PORT ?? 8084)
@@ -40,7 +47,8 @@ console.log(`发送 ${cmd} → ${cmdTopic}`)
 console.log(`payload: ${payload}`)
 
 const client = mqtt.connect(url, {
-  clientId: `sendtest-${Math.random().toString(36).slice(2, 8)}`,
+  // ACL 按 client id 匹配：默认用控制端 client id，否则 publish 会被 broker 拒。
+  clientId: process.env.MQTT_CLIENT_ID || 'pc01-controller',
   username,
   password,
   keepalive: 30,

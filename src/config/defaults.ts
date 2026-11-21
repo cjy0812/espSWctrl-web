@@ -13,6 +13,16 @@ export const DEFAULT_PROTOCOL: 'wss' | 'ws' = 'wss'
 /** 固件 consts.rs:DEFAULT_DEV_ID */
 export const DEFAULT_DEVICE_ID = 'pc01'
 
+/**
+ * 默认 client id。
+ *
+ * ⚠️ 实测（2026-11-22）：broker ACL 按 **client id** 匹配 —— 只有
+ * `pc01-controller` 拥有控制端权限（订阅 state/status/ack + 发布 cmd）。
+ * 改成随机值会导致订阅被 ACL 拒绝（SUBACK 失败）。
+ * 若既有 Windows/Android 控制端同时在线，同 client id 会互踢。
+ */
+export const DEFAULT_CLIENT_ID = 'pc01-controller'
+
 /** MQTT keepalive（秒） */
 export const DEFAULT_KEEPALIVE = 30
 
