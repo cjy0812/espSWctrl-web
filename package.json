@@ -1,0 +1,33 @@
+{
+  "name": "espSWctrl-web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "packageManager": "pnpm@12.14.0",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "vue-tsc --noEmit",
+    "test:unit": "vitest run",
+    "test:watch": "vitest",
+    "lint": "biome check .",
+    "format": "biome format --write .",
+    "mqtt:probe": "node scripts/probe-broker.mjs",
+    "mqtt:send": "node scripts/send-test.mjs"
+  },
+  "dependencies": {
+    "mqtt": "^5.16.1",
+    "pinia": "^4.1.0",
+    "vue": "^3.5.46"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.6.8",
+    "@types/node": "^24.0.0",
+    "@vitejs/plugin-vue": "^6.0.11",
+    "typescript": "~5.9.3",
+    "vite": "^8.3.8",
+    "vitest": "^5.1.1",
+    "vue-tsc": "^3.3.14"
+  }
+}
