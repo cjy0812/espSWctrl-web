@@ -57,7 +57,7 @@ ESP32-C3「电源键控制器」的 Web 客户端。浏览器通过 **MQTT over 
 
 - [ ] Cloudflare Pages（HTTPS）+ `base` 配置
 - [ ] CSP 头
-- [x] GitHub Actions：typecheck + lint + test + build ——（待首次 CI 验证）
+- [ ] GitHub Actions：typecheck + lint + test + build —— 待首次 CI 验证
 - [ ] 验收：线上强制 WSS；构建产物与仓库不含凭据
 
 ---
