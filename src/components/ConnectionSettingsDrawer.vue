@@ -41,7 +41,7 @@ const storageOptions: SelectOption[] = [
       </n-gi>
     </n-grid>
 
-    <n-form-item label="用户名（控制端账号，禁止设备账号）">
+    <n-form-item label="用户名（按 broker 认证配置填写）">
       <n-input v-model:value="connection.config.username" />
     </n-form-item>
 
