@@ -15,25 +15,33 @@ const canPress = computed(() => connection.state === 'subscribed' && !pending.va
 </script>
 
 <template>
-  <section class="card power">
-    <button class="btn primary big" type="button" :disabled="!canPress" @click="press">
-      模拟短按电源键
-    </button>
-    <p class="hint">电源键是「按一下翻转」语义，不区分开机/关机。</p>
-    <p v-if="pending" class="hint">正在等待设备回执…</p>
+  <n-card size="small" :bordered="false" title="电源键">
+    <n-space vertical :size="12">
+      <n-button
+        type="primary"
+        block
+        size="large"
+        :disabled="!canPress"
+        :loading="pending"
+        @click="press"
+      >
+        模拟短按电源键
+      </n-button>
+      <n-text depth="3">电源键是「按一下翻转」语义，不区分开机/关机。</n-text>
 
-    <div v-if="unknown.length > 0" class="unknown">
-      <p v-for="req in unknown" :key="req.id" class="unknown__item">
-        <span>
-          指令结果未知（{{ req.unknownReason === 'timeout' ? '未收到回执' : '连接断开' }}）
-        </span>
-        <button class="btn small" type="button" @click="confirmUnknown(req.id, true)">
-          已执行
-        </button>
-        <button class="btn small" type="button" @click="confirmUnknown(req.id, false)">
-          未执行
-        </button>
-      </p>
-    </div>
-  </section>
+      <n-alert
+        v-for="req in unknown"
+        :key="req.id"
+        type="warning"
+        :bordered="false"
+        :title="`指令结果未知（${req.unknownReason === 'timeout' ? '未收到回执' : '连接断开'}）`"
+      >
+        <n-space align="center" :size="8">
+          <n-text depth="3">请确认 PC 实际状态后标记：</n-text>
+          <n-button size="tiny" @click="confirmUnknown(req.id, true)">已执行</n-button>
+          <n-button size="tiny" @click="confirmUnknown(req.id, false)">未执行</n-button>
+        </n-space>
+      </n-alert>
+    </n-space>
+  </n-card>
 </template>

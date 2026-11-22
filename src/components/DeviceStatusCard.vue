@@ -2,8 +2,8 @@
 import { computed } from 'vue'
 
 import { usePowerController } from '@/composables/usePowerController'
-import type { DevicePresence } from '@/stores/deviceStore'
 import { useConnectionStore } from '@/stores/connectionStore'
+import type { DevicePresence } from '@/stores/deviceStore'
 import { useDeviceStore } from '@/stores/deviceStore'
 import { relativeTime } from '@/utils/time'
 
@@ -11,11 +11,11 @@ const device = useDeviceStore()
 const connection = useConnectionStore()
 const { refreshState } = usePowerController()
 
-const PRESENCE: Record<DevicePresence, { label: string; cls: string }> = {
-  unknown: { label: '未知', cls: 'badge--muted' },
-  online: { label: '在线', cls: 'badge--ok' },
-  offline: { label: '离线', cls: 'badge--off' },
-  stale: { label: '状态过期', cls: 'badge--stale' },
+const PRESENCE: Record<DevicePresence, { label: string; type: 'default' | 'success' | 'error' | 'warning' }> = {
+  unknown: { label: '未知', type: 'default' },
+  online: { label: '在线', type: 'success' },
+  offline: { label: '离线', type: 'error' },
+  stale: { label: '状态过期', type: 'warning' },
 }
 
 const presence = computed(() => PRESENCE[device.presence])
@@ -33,26 +33,29 @@ const lastUpdate = computed(() => {
 </script>
 
 <template>
-  <section class="card">
-    <div class="row">
-      <span class="row__label">设备</span>
-      <span class="badge" :class="presence.cls">{{ presence.label }}</span>
-    </div>
-    <div class="row">
-      <span class="row__label">PC 电源</span>
-      <span class="row__value">{{ pcLabel }}</span>
-    </div>
-    <div class="row">
-      <span class="row__label">最后更新</span>
-      <span class="row__value muted">{{ lastUpdate }}</span>
-      <button
-        class="btn small"
-        :disabled="connection.state !== 'subscribed'"
-        type="button"
-        @click="refreshState"
-      >
-        刷新
-      </button>
-    </div>
-  </section>
+  <n-card size="small" :bordered="false" title="设备状态">
+    <n-space vertical :size="12">
+      <n-space align="center" justify="space-between">
+        <n-text>设备</n-text>
+        <n-tag :type="presence.type" size="small" :bordered="false">{{ presence.label }}</n-tag>
+      </n-space>
+      <n-space align="center" justify="space-between">
+        <n-text>PC 电源</n-text>
+        <n-text strong>{{ pcLabel }}</n-text>
+      </n-space>
+      <n-space align="center" justify="space-between">
+        <n-text>最后更新</n-text>
+        <n-space align="center" :size="8">
+          <n-text depth="3">{{ lastUpdate }}</n-text>
+          <n-button
+            size="tiny"
+            :disabled="connection.state !== 'subscribed'"
+            @click="refreshState"
+          >
+            刷新
+          </n-button>
+        </n-space>
+      </n-space>
+    </n-space>
+  </n-card>
 </template>

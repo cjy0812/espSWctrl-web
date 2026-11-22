@@ -1,41 +1,33 @@
 import { ref } from 'vue'
 
-export type Theme = 'light' | 'dark'
-
-const STORAGE_KEY = 'espSWctrl-web:theme'
-
-function detect(): Theme {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY)
-    if (saved === 'light' || saved === 'dark') return saved
-  } catch {
-    /* 隐私模式下忽略 */
-  }
-  if (typeof matchMedia === 'function' && matchMedia('(prefers-color-scheme: dark)').matches) {
-    return 'dark'
-  }
-  return 'light'
-}
-
-/** 深色/浅色主题：跟随系统为默认，用户切换后持久化到 localStorage。 */
+/**
+ * 主题状态：默认跟随系统，用户切换后持久化到 localStorage。
+ * 实际主题由 Naive UI 的 n-config-provider 应用（darkTheme / 默认浅色）。
+ */
 export function useTheme() {
-  const current = ref<Theme>(detect())
+  const STORAGE_KEY = 'espSWctrl-web:theme'
 
-  function apply(theme: Theme): void {
-    current.value = theme
-    document.documentElement.dataset.theme = theme
+  function detect(): boolean {
     try {
-      localStorage.setItem(STORAGE_KEY, theme)
+      const saved = localStorage.getItem(STORAGE_KEY)
+      if (saved === 'dark') return true
+      if (saved === 'light') return false
+    } catch {
+      /* 隐私模式忽略 */
+    }
+    return typeof matchMedia === 'function' && matchMedia('(prefers-color-scheme: dark)').matches
+  }
+
+  const isDark = ref(detect())
+
+  function toggle(): void {
+    isDark.value = !isDark.value
+    try {
+      localStorage.setItem(STORAGE_KEY, isDark.value ? 'dark' : 'light')
     } catch {
       /* 忽略写入失败 */
     }
   }
 
-  function toggle(): void {
-    apply(current.value === 'dark' ? 'light' : 'dark')
-  }
-
-  apply(current.value)
-
-  return { current, toggle }
+  return { isDark, toggle }
 }

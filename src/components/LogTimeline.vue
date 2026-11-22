@@ -1,8 +1,16 @@
 <script setup lang="ts">
+import { computed } from 'vue'
+
 import { useLogStore } from '@/stores/logStore'
 import { formatClock } from '@/utils/time'
 
 const log = useLogStore()
+
+const text = computed(() =>
+  log.entries
+    .map((entry) => `${formatClock(Math.floor(entry.at / 1000))} [${entry.kind}] ${entry.text}`)
+    .join('\n'),
+)
 
 function download(): void {
   const blob = new Blob([log.exportJson()], { type: 'application/json' })
@@ -16,20 +24,14 @@ function download(): void {
 </script>
 
 <template>
-  <section class="card">
-    <div class="row row--between">
-      <h2 class="card__title">日志</h2>
-      <div class="row">
-        <button class="btn small" type="button" @click="download">导出</button>
-        <button class="btn small" type="button" @click="log.clear()">清空</button>
-      </div>
-    </div>
-    <p v-if="log.entries.length === 0" class="muted">暂无日志</p>
-    <ul class="log-list">
-      <li v-for="entry in log.entries" :key="entry.id" :data-kind="entry.kind">
-        <span class="log-list__time">{{ formatClock(Math.floor(entry.at / 1000)) }}</span>
-        <span>{{ entry.text }}</span>
-      </li>
-    </ul>
-  </section>
+  <n-card size="small" :bordered="false" title="日志">
+    <template #header-extra>
+      <n-space :size="8">
+        <n-button size="tiny" @click="download">导出</n-button>
+        <n-button size="tiny" @click="log.clear()">清空</n-button>
+      </n-space>
+    </template>
+    <n-log v-if="log.entries.length > 0" :log="text" :rows="24" :font-size="12" />
+    <n-text v-else depth="3">暂无日志</n-text>
+  </n-card>
 </template>

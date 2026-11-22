@@ -12,29 +12,29 @@ function ago(ts: number | null): string {
 </script>
 
 <template>
-  <section class="card">
-    <h2 class="card__title">连接诊断</h2>
-    <dl class="diag">
-      <dt>连接状态</dt>
-      <dd>{{ connection.state }}</dd>
-      <dt>WebSocket</dt>
-      <dd>{{ connection.connectedAt ? '已建立' : '未建立' }}</dd>
-      <dt>Client ID</dt>
-      <dd>{{ connection.actualClientId || '（未连接）' }}</dd>
-      <dt>Broker</dt>
-      <dd>{{ connection.config.host }}:{{ connection.config.port }}{{ connection.config.path }}</dd>
-      <dt>订阅 topic</dt>
-      <dd>{{ connection.subscribedTopics.length }} / 3</dd>
-      <dt>设备状态更新</dt>
-      <dd>{{ ago(device.lastStatusAt) }}</dd>
-      <dt>最近 ACK</dt>
-      <dd>
+  <n-card size="small" :bordered="false" title="连接诊断">
+    <n-descriptions :column="1" label-placement="left" bordered size="small">
+      <n-descriptions-item label="连接状态">{{ connection.state }}</n-descriptions-item>
+      <n-descriptions-item label="WebSocket">
+        {{ connection.connectedAt ? '已建立' : '未建立' }}
+      </n-descriptions-item>
+      <n-descriptions-item label="Client ID">
+        {{ connection.actualClientId || '（未连接）' }}
+      </n-descriptions-item>
+      <n-descriptions-item label="Broker">
+        {{ connection.config.host }}:{{ connection.config.port }}{{ connection.config.path }}
+      </n-descriptions-item>
+      <n-descriptions-item label="订阅 topic">
+        {{ connection.subscribedTopics.length }} / 3
+      </n-descriptions-item>
+      <n-descriptions-item label="设备状态更新">{{ ago(device.lastStatusAt) }}</n-descriptions-item>
+      <n-descriptions-item label="最近 ACK">
         {{
           connection.lastAck
             ? `${connection.lastAck.result}（${ago(connection.lastAck.at)}）`
             : '暂无'
         }}
-      </dd>
-    </dl>
-  </section>
+      </n-descriptions-item>
+    </n-descriptions>
+  </n-card>
 </template>

@@ -1,35 +1,68 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
-import { useTheme } from '@/composables/useTheme'
-import ConnectionBar from '@/components/ConnectionBar.vue'
 import ConnectionSettingsDrawer from '@/components/ConnectionSettingsDrawer.vue'
 import DeviceStatusCard from '@/components/DeviceStatusCard.vue'
 import DiagnosticsPanel from '@/components/DiagnosticsPanel.vue'
 import LogTimeline from '@/components/LogTimeline.vue'
 import ParamsReadout from '@/components/ParamsReadout.vue'
 import PowerButton from '@/components/PowerButton.vue'
+import type { MqttConnectionState } from '@/mqtt/types'
 import { useConnectionStore } from '@/stores/connectionStore'
 
-type Tab = 'status' | 'logs' | 'params'
+const props = defineProps<{ isDark: boolean }>()
+const emit = defineEmits<{ toggleTheme: [] }>()
 
-const tab = ref<Tab>('status')
+const tab = ref<'status' | 'logs' | 'params'>('status')
 const showSettings = ref(false)
 const connection = useConnectionStore()
-const theme = useTheme()
 
-const tabs: { key: Tab; label: string }[] = [
-  { key: 'status', label: '状态' },
-  { key: 'logs', label: '日志' },
-  { key: 'params', label: '参数' },
-]
+const LABELS: Record<MqttConnectionState, string> = {
+  idle: '未连接',
+  connecting: '连接中…',
+  connected: '已连接',
+  subscribed: '已订阅',
+  reconnecting: '重连中',
+  disconnected: '已断开',
+  error: '连接出错',
+}
+
+const label = computed(() => LABELS[connection.state])
+
+const tagType = computed(() => {
+  if (connection.state === 'subscribed') return 'success'
+  if (connection.state === 'error') return 'error'
+  if (connection.state === 'reconnecting' || connection.state === 'connecting') return 'warning'
+  return 'default'
+})
+
+const themeLabel = computed(() => (props.isDark ? '浅色' : '深色'))
 </script>
 
 <template>
-  <div class="shell">
-    <ConnectionBar :theme="theme.current.value" @toggle-theme="theme.toggle" />
+  <n-card size="small" :bordered="false" :content-style="{ padding: '16px' }">
+    <n-tabs v-model:value="tab" type="line" animated size="small">
+      <n-tab name="status" tab="状态" />
+      <n-tab name="logs" tab="日志" />
+      <n-tab name="params" tab="参数" />
+    </n-tabs>
 
-    <main class="content">
+    <n-divider />
+
+    <n-space vertical :size="16">
+      <n-space align="center" justify="space-between" :size="12">
+        <n-text strong>电源键控制器</n-text>
+        <n-space align="center" :size="8">
+          <n-tag :type="tagType" size="small" :bordered="false">{{ label }}</n-tag>
+          <n-button size="small" @click="emit('toggleTheme')">{{ themeLabel }}</n-button>
+          <n-button size="small" @click="showSettings = true">设置</n-button>
+        </n-space>
+      </n-space>
+
+      <n-alert v-if="connection.errorMessage" type="error" :bordered="false">
+        {{ connection.errorMessage }}
+      </n-alert>
+
       <template v-if="tab === 'status'">
         <DeviceStatusCard />
         <PowerButton />
@@ -37,27 +70,12 @@ const tabs: { key: Tab; label: string }[] = [
       </template>
       <LogTimeline v-else-if="tab === 'logs'" />
       <ParamsReadout v-else />
-    </main>
+    </n-space>
+  </n-card>
 
-    <nav class="tabs">
-      <button
-        v-for="t in tabs"
-        :key="t.key"
-        class="tabs__btn"
-        :class="{ 'tabs__btn--active': tab === t.key }"
-        type="button"
-        @click="tab = t.key"
-      >
-        {{ t.label }}
-      </button>
-    </nav>
-
-    <button class="fab" type="button" @click="showSettings = true">设置</button>
-
-    <ConnectionSettingsDrawer v-if="showSettings" @close="showSettings = false" />
-
-    <p v-if="connection.errorMessage" class="error global-error">
-      {{ connection.errorMessage }}
-    </p>
-  </div>
+  <n-drawer v-model:show="showSettings" :width="420" placement="right">
+    <n-drawer-content title="连接设置" closable>
+      <ConnectionSettingsDrawer @close="showSettings = false" />
+    </n-drawer-content>
+  </n-drawer>
 </template>
