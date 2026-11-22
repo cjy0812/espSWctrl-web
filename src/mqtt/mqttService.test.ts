@@ -1,7 +1,7 @@
 import { EventEmitter } from 'node:events'
-import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { MqttClient } from 'mqtt'
 import mqtt from 'mqtt'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { MqttService } from './mqttService'
 import type { BrokerConfig, MqttServiceEvents } from './types'
