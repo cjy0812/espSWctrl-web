@@ -139,3 +139,34 @@ describe('断线与人工确认', () => {
     expect(tracker.resolveUnknown(req.id, true)).toBeNull()
   })
 })
+
+
+describe('历史记录上限', () => {
+  it('保留最近 100 条已解决记录', () => {
+    const { tracker } = makeTracker()
+    for (let i = 0; i < 105; i += 1) {
+      tracker.add('press', `n${i}`, i, 30)
+      tracker.handleAck('ok')
+      tracker.trim(100)
+    }
+
+    expect(tracker.all).toHaveLength(100)
+    expect(tracker.all[0]?.nonce).toBe('n5')
+    expect(tracker.all.at(-1)?.nonce).toBe('n104')
+  })
+
+  it('裁剪历史时保留未解决请求', () => {
+    const { tracker } = makeTracker()
+    for (let i = 0; i < 100; i += 1) {
+      tracker.add('press', `n${i}`, i, 30)
+      tracker.handleAck('ok')
+    }
+    const pending = tracker.add('press', 'active', 101, 30)
+
+    tracker.trim(100)
+
+    expect(tracker.all).toHaveLength(100)
+    expect(tracker.all.some((request) => request.id === pending.id)).toBe(true)
+    expect(tracker.canSend).toBe(false)
+  })
+})

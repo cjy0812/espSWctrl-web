@@ -35,6 +35,8 @@ export const useCommandStore = defineStore('command', () => {
   const lastError = ref('')
 
   function refresh(): void {
+    // Keep only a bounded diagnostic history; pending/unknown requests are never trimmed.
+    tracker.trim(100)
     requests.value = [...tracker.all]
   }
 
@@ -89,8 +91,8 @@ export const useCommandStore = defineStore('command', () => {
 
   /** 由定时器调用，返回超时的请求。 */
   function tick(): void {
-    tracker.tick()
-    refresh()
+    // The ticker runs every second; avoid replacing the reactive array when nothing timed out.
+    if (tracker.tick().length > 0) refresh()
   }
 
   function clearHistory(): void {
