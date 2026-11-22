@@ -27,10 +27,22 @@ describe('单飞窗口', () => {
     tracker.add('press', 'n1', 1, 30)
     expect(() => tracker.add('press', 'n2', 1, 30)).toThrow(/单飞/)
   })
+
+  it('unknown 期间继续锁定窗口，直到人工确认', () => {
+    const { tracker } = makeTracker()
+    const req = tracker.add('press', 'n1', 1, 30)
+    tracker.handleDisconnect()
+
+    expect(tracker.canSend).toBe(false)
+    expect(() => tracker.add('press', 'n2', 2, 30)).toThrow(/未解决/)
+    expect(tracker.resolveUnknown(req.id, false)?.status).toBe('failed')
+    expect(tracker.canSend).toBe(true)
+    expect(tracker.add('press', 'n2', 2, 30).status).toBe('pending')
+  })
 })
 
 describe('超时与迟到回执', () => {
-  it('超时后标记为 unknown（不是 failed）', () => {
+  it('超时后标记为 unknown 并继续锁定发送窗口', () => {
     let now = 0
     const onTimeout = vi.fn()
     const t = new RequestTracker({ ackTimeoutMs: 1000, now: () => now, onTimeout })
@@ -42,11 +54,11 @@ describe('超时与迟到回执', () => {
     expect(timedOut).toHaveLength(1)
     expect(timedOut[0]?.status).toBe('unknown')
     expect(timedOut[0]?.unknownReason).toBe('timeout')
-    expect(t.canSend).toBe(true)
+    expect(t.canSend).toBe(false)
     expect(onTimeout).toHaveBeenCalledTimes(1)
   })
 
-  it('超时 → unknown，随后 ack 归因并触发 onLateAck', () => {
+  it('超时 → unknown，随后迟到 ack 归因并释放窗口', () => {
     let now = 0
     const onLateAck = vi.fn()
     const t = new RequestTracker({ ackTimeoutMs: 1000, now: () => now, onLateAck })
@@ -56,11 +68,12 @@ describe('超时与迟到回执', () => {
     const timedOut = t.tick()
     expect(timedOut).toHaveLength(1)
     expect(timedOut[0]?.status).toBe('unknown')
-    expect(t.canSend).toBe(true)
+    expect(t.canSend).toBe(false)
 
     const resolved = t.handleAck('ok')
     expect(resolved?.status).toBe('ok')
     expect(resolved?.late).toBe(true)
+    expect(t.canSend).toBe(true)
     expect(onLateAck).toHaveBeenCalledTimes(1)
   })
 
@@ -99,16 +112,17 @@ describe('handleAck 归因', () => {
 })
 
 describe('断线与人工确认', () => {
-  it('断线把 pending 标为 unknown', () => {
+  it('断线把 pending 标为 unknown 并锁定发送窗口', () => {
     const { tracker } = makeTracker()
     tracker.add('press', 'n1', 1, 30)
     const affected = tracker.handleDisconnect()
     expect(affected).toHaveLength(1)
     expect(affected[0]?.unknownReason).toBe('disconnect')
     expect(tracker.needsConfirmation).toBe(true)
+    expect(tracker.canSend).toBe(false)
   })
 
-  it('人工确认可标记为已执行/未执行', () => {
+  it('人工确认可标记为已执行/未执行并释放窗口', () => {
     const { tracker } = makeTracker()
     const req = tracker.add('press', 'n1', 1, 30)
     tracker.handleDisconnect()
@@ -116,6 +130,7 @@ describe('断线与人工确认', () => {
     expect(r?.status).toBe('ok')
     expect(r?.ackResult).toBe('ok-manual')
     expect(tracker.needsConfirmation).toBe(false)
+    expect(tracker.canSend).toBe(true)
   })
 
   it('人工确认只能作用于 unknown 状态', () => {

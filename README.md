@@ -57,7 +57,7 @@ ESP32-C3「电源键控制器」的 Web 客户端。浏览器通过 **MQTT over 
 
 - [ ] Cloudflare Pages（HTTPS）+ `base` 配置
 - [ ] CSP 头
-- [ ] GitHub Actions：typecheck + test + build
+- [x] GitHub Actions：typecheck + lint + test + build ——（2026-11-23，PR #1 CI run `45064805919` 全绿）
 - [ ] 验收：线上强制 WSS；构建产物与仓库不含凭据
 
 ---
@@ -96,4 +96,4 @@ pnpm mqtt:send press             # 端到端发 press 并等 ack
 1. **账号隔离（建议）**：ACL 按 client id 授权，前端已用 `pc01-controller`。但认证目前与设备共用 `esp32_pc01`。建议在 EMQX 建独立认证用户（如 `pc01_controller`）给前端，然后把 ACL 的 `pc01-controller` 规则同时绑定到新用户名。
 2. **device_id 实际值**：固件默认 `pc01`，需从设备 NVS 确认。
 3. **主板 4000ms 强制断电阈值口径**：决定阶段 2 是否开放长按。
-4. **EMQX 并发连接限制**：前端与既有控制端共用 `pc01-controller` 时，同 client_id 会互踢；前端默认随机 client_id 规避。
+4. **EMQX 并发连接限制**：前端与既有控制端共用 `pc01-controller` 时，同 client_id 会互踢；前端默认 client id 也为 `pc01-controller`。

@@ -62,10 +62,16 @@ export class MqttService {
     return `${this.cfg.protocol}://${this.cfg.host}:${this.cfg.port}${path}`
   }
 
+  /** 用户主动连接：重置退避计数。内部自动重连不调用此入口。 */
   connect(): void {
     this.manualClose = false
     this.clearReconnect()
     this.reconnectAttempt = 0
+    this.openConnection()
+  }
+
+  /** 建立一次连接。由初次连接和退避定时器共用，避免重置退避计数。 */
+  private openConnection(): void {
     this.setState('connecting')
     this.events.onLog({
       kind: 'conn',
@@ -131,7 +137,7 @@ export class MqttService {
     })
     this.reconnectTimer = setTimeout(() => {
       this.reconnectTimer = null
-      this.connect()
+      this.openConnection()
     }, delay)
   }
 
