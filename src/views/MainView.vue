@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { computed, defineAsyncComponent, ref } from 'vue'
 
-import ConnectionSettingsDrawer from '@/components/ConnectionSettingsDrawer.vue'
 import DeviceStatusCard from '@/components/DeviceStatusCard.vue'
 import DiagnosticsPanel from '@/components/DiagnosticsPanel.vue'
 import PowerButton from '@/components/PowerButton.vue'
 import type { MqttConnectionState } from '@/mqtt/types'
 import { useConnectionStore } from '@/stores/connectionStore'
 
+const ConnectionSettingsDrawer = defineAsyncComponent(() => import('@/components/ConnectionSettingsDrawer.vue'))
 const LogTimeline = defineAsyncComponent(() => import('@/components/LogTimeline.vue'))
 const ParamsReadout = defineAsyncComponent(() => import('@/components/ParamsReadout.vue'))
 
