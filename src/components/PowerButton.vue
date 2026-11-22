@@ -11,7 +11,9 @@ const { press, confirmUnknown } = usePowerController()
 
 const pending = computed(() => commands.requests.some((r) => r.status === 'pending'))
 const unknown = computed(() => commands.requests.filter((r) => r.status === 'unknown'))
-const canPress = computed(() => connection.state === 'subscribed' && !pending.value)
+const canPress = computed(
+  () => connection.state === 'subscribed' && !pending.value && unknown.value.length === 0,
+)
 </script>
 
 <template>

@@ -18,7 +18,7 @@ export interface BrokerConfig {
   protocol: MqttProtocol
   username: string
   password: string
-  /** 默认随机 web-xxxxxxxx；可手动指定 */
+  /** 使用配置中的 client id；默认值由 config/defaults.ts 决定。 */
   clientId: string
   keepalive: number
   clean: boolean

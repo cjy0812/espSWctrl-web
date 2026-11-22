@@ -10,7 +10,7 @@ import { useLogStore } from '@/stores/logStore'
 /**
  * 设备控制编排：发送 press、超时扫描、结果未知的人工确认、状态刷新。
  *
- * MVP 只发 `press`（P0-4：press_long 不开放）。
+ * MVP 只发 `press`（不开放 press_long）。
  */
 export function usePowerController() {
   const connection = useConnectionStore()
@@ -42,12 +42,16 @@ export function usePowerController() {
       return false
     }
     if (!commands.canSend()) {
-      log.push({ kind: 'system', text: '已有在途指令：请等待回执，或先确认上一条的结果' })
+      log.push({ kind: 'system', text: '已有未解决指令：请等待回执，或先确认上一条的结果' })
       return false
     }
     const c = connection.config
     const payload = buildCmdPayload('press', { ttl: c.ttl })
     commands.send(payload.cmd, payload.nonce, payload.ts, payload.ttl ?? c.ttl)
+
+    // publishAsync 抛错并不总能证明 broker/设备没有收到消息。
+    // 从创建请求开始计时，最终以 ack 或 unknown 流程收敛，不能留下永久 pending。
+    ensureTicker()
     try {
       await connection.publish(topic('cmd', c.deviceId.trim()), encodePayload(payload))
       log.push({
@@ -55,10 +59,12 @@ export function usePowerController() {
         text: '已发送 press',
         meta: { nonce: payload.nonce, ts: payload.ts, ttl: payload.ttl },
       })
-      ensureTicker()
       return true
     } catch (e) {
-      log.push({ kind: 'error', text: `发送失败：${e instanceof Error ? e.message : String(e)}` })
+      log.push({
+        kind: 'error',
+        text: `publish 未确认成功，指令结果暂时未知；请勿重复按键：${e instanceof Error ? e.message : String(e)}`,
+      })
       return false
     }
   }

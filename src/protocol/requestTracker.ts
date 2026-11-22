@@ -1,12 +1,11 @@
 /**
  * 请求状态机 —— 应对「ack 的 nonce 恒为空、无法严格关联请求」这一固件现实。
  *
- * 设计要点（P0-2）：
- * - 单飞窗口：有在途请求时禁止发新指令（canSend = pending 为空）。
- * - 超时/断线 → 状态标记为 `unknown`（结果未知），**不是 failed**。
- * - 迟到的 ack 仍可安全归因：因为任一时刻最多只有一个可追溯请求。
- * - 支持人工确认：结果未知时由用户标记为已执行/未执行。
- * - 不自动重试；重试必须换新 nonce（由调用方保证）。
+ * 设计要点：
+ * - 单飞窗口：pending 或 unknown 请求存在时禁止发新指令。
+ * - 超时/断线 → 状态标记为 unknown（结果未知），不是 failed。
+ * - 迟到 ack 仍可归因：任一时刻最多只有一个尚未解决的请求。
+ * - 支持人工确认；不自动重试。
  */
 
 import type { DeviceCommand } from './payloads'
@@ -78,9 +77,13 @@ export class RequestTracker {
     return last ?? null
   }
 
-  /** 单飞窗口：没有待解决请求时才允许发送。 */
+  /**
+   * 单飞窗口：pending 和 unknown 都占用窗口。
+   * unknown 不能释放窗口，因为设备可能已经执行了指令，而 ack 的 nonce
+   * 为空；继续发送会让后续回执无法可靠归因，也可能造成电源再次翻转。
+   */
   get canSend(): boolean {
-    return this.pending.length === 0
+    return this.pending.length === 0 && this.unknown.length === 0
   }
 
   /** 是否还有「结果未知」的请求需要人工确认。 */
@@ -90,7 +93,7 @@ export class RequestTracker {
 
   add(cmd: DeviceCommand, nonce: string, ts: number, ttl: number): TrackedRequest {
     if (!this.canSend) {
-      throw new Error('已有在途请求，禁止并发发送（单飞窗口）')
+      throw new Error('已有未解决请求，禁止并发发送（单飞窗口）')
     }
     const req: TrackedRequest = {
       id: nextId(),
