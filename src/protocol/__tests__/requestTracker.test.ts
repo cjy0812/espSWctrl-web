@@ -140,7 +140,6 @@ describe('断线与人工确认', () => {
   })
 })
 
-
 describe('历史记录上限', () => {
   it('保留最近 100 条已解决记录', () => {
     const { tracker } = makeTracker()
