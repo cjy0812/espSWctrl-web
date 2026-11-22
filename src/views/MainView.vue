@@ -40,7 +40,7 @@ const themeLabel = computed(() => (props.isDark ? '浅色' : '深色'))
 </script>
 
 <template>
-  <n-card size="small" :bordered="false" :content-style="{ padding: '16px' }">
+  <n-card size="small" :bordered="false">
     <n-tabs v-model:value="tab" type="line" animated size="small">
       <n-tab name="status" tab="状态" />
       <n-tab name="logs" tab="日志" />

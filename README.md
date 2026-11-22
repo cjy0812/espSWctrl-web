@@ -27,7 +27,7 @@ ESP32-C3「电源键控制器」的 Web 客户端。浏览器通过 **MQTT over 
 - [x] 仓库与构建配置（pnpm 12 / Vite 8 / TS 5.9 / Biome 2.6） ——（2026-11-22，`pnpm install` + `pnpm build` 通过）
 - [x] `src/config/storage.ts`：凭据三态存储（memory / session / local）+ URL 预填 + 脱敏
 - [x] `src/mqtt/types.ts`、`mqttService.ts`、`useMqtt.ts` —— 自管指数退避重连，密码不进日志
-- [x] 连接设置抽屉与顶部连接状态条（`ConnectionSettingsDrawer.vue` / `ConnectionBar.vue`）
+- [x] 连接设置抽屉与主界面顶部连接状态区（`ConnectionSettingsDrawer.vue` / `MainView.vue`）
 - [x] `scripts/probe-broker.mjs`：三个具体 topic 分别订阅（不用 `#`），打印 SUBACK 与 retained
 - [x] `scripts/send-test.mjs`：命令行发 press 做端到端
 - [x] 探测脚本可用：mqtt.js 成功完成 WSS + MQTT 握手（CONNACK rc=0） ——（2026-11-22，用设备账号实测；订阅如预期被 ACL 拒绝）
@@ -42,7 +42,7 @@ ESP32-C3「电源键控制器」的 Web 客户端。浏览器通过 **MQTT over 
 - [x] `DeviceStatusCard`、`PowerButton`（**仅短按**）、`LogTimeline`、`DiagnosticsPanel`、`MainView`
 - [x] 设备状态四态模型（unknown / online / offline / stale）
 - [x] 结果未知的人工确认流程（已执行 / 未执行）
-- [x] 单元测试 33 个（payloads / topics / requestTracker / mask） ——（2026-11-22，`pnpm test:unit` 全绿）
+- [x] 单元测试 35 个（payloads / topics / requestTracker / MQTT 重连 / mask） ——（2026-11-22，`pnpm test:unit` 全绿）
 - [x] 门禁：`pnpm typecheck` + `pnpm lint` + `pnpm build` 全绿
 - [ ] **验收：真机短按 → ack ok → PC 状态翻转** —— 待授权执行（会真实翻转电源）
 
