@@ -55,10 +55,12 @@ ESP32-C3「电源键控制器」的 Web 客户端。浏览器通过 **MQTT over 
 
 ### 阶段 3：部署
 
-- [ ] Cloudflare Pages（HTTPS）+ `base` 配置
-- [ ] CSP 头
-- [x] GitHub Actions：typecheck + lint + test + build ——（2026-11-23，PR #1 CI run `45064805919` 全绿）
-- [ ] 验收：线上强制 WSS；构建产物与仓库不含凭据
+- [x] Cloudflare Workers Static Assets：复用 `espswctrl-web`，`dist` + SPA fallback ——（2026-11-24，PR #7 / merge `59b3366`）
+- [x] CSP 与基础安全响应头：`public/_headers`，允许 WSS、禁止明文 WS ——（2026-11-24，PR #7）
+- [x] GitHub Actions：typecheck + lint + test + build + Wrangler dry-run ——（2026-11-24，PR #7 CI run `45416631476` 全绿）
+- [x] Worker 自动部署工作流：main CI 成功后执行构建和部署 ——（2026-11-24，PR #7）
+- [ ] 配置 GitHub Actions 的 `CLOUDFLARE_API_TOKEN` secret 与 `CLOUDFLARE_ACCOUNT_ID` variable，完成生产 Worker 发布
+- [ ] 绑定 `esp32.canghaizhifeng.eu.org` 自定义域名并验收 HTTPS / WSS；检查构建产物与仓库不含凭据
 
 ---
 
