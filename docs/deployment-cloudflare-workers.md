@@ -22,6 +22,17 @@
 
 不要把 Token 放进仓库、工作流明文或聊天。首次配置后，可在 Actions 中手动运行 `Deploy Cloudflare Worker`；后续 main CI 成功会自动部署。
 
+## GitHub Actions 凭据
+
+部署工作流只需要更新已经存在的 Worker，不需要创建 Worker。建议创建一个 API Token，并把权限限制到目标资源：
+
+- Account / Workers：对单个 Worker `espswctrl-web` 授予 **Editor**（旧权限界面对应 Workers Scripts:Edit / Write）。
+- API Token 的资源范围只选当前 Cloudflare 账户和该 Worker，不要使用 Global API Key。
+- Repository secret `CLOUDFLARE_API_TOKEN`：保存该 Token。
+- Repository variable `CLOUDFLARE_ACCOUNT_ID`：值为 Cloudflare Account ID。
+
+参考 Cloudflare 的 [Workers roles and permissions](https://developers.cloudflare.com/workers/authorization/workers/)：部署已有 Worker 需要该 Worker 的 Editor；若由部署命令同时修改 Custom Domain/Route，还需要对应 Zone 的 Workers Routes Write。本仓库工作流不在部署步骤里改域名绑定，因此 Token 不必为此额外扩大权限。
+
 ## 本地部署
 
 安装依赖后执行：
