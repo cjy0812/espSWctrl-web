@@ -76,3 +76,6 @@ jobs:
 
       - name: Production build
         run: pnpm build
+
+      - name: Validate Worker deployment bundle
+        run: pnpm dlx wrangler@4.167.0 deploy --dry-run --config wrangler.jsonc
